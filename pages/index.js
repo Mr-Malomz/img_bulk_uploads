@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Image from 'next/image';
 import { useState } from 'react';
 import styles from '../styles/Home.module.css';
 
@@ -6,7 +7,7 @@ export default function Home() {
   const [imgSrc, setImgSrc] = useState(null);
 
   const handleChange = (e) => {
-    if (e.target.files && e.target.files[0] && e.target.files.length < 10) {
+    if (e.target.files && e.target.files[0]) {
       const fileList = e.target.files;
       const fileArray = [];
       Object.keys(fileList).map((element) => {
@@ -14,14 +15,11 @@ export default function Home() {
       });
       setImgSrc(fileArray);
     }
-    return;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const form = e.currentTarget;
-    const cloudName = 'dtgbzmpca';
-    const upPreset = 'wgyszbgz';
     const fileInput = Array.from(form.elements).find(
       ({ name }) => name === 'img'
     );
@@ -29,7 +27,7 @@ export default function Home() {
 
     const formData = new FormData();
 
-    formData.append('upload_preset', upPreset);
+    formData.append('upload_preset', process.env.NEXT_PUBLIC_UPLOAD_PRESET);
 
     Object.keys(fileInput.files).map((element) => {
       fileChildren.push(fileInput.files[element]);
@@ -38,10 +36,13 @@ export default function Home() {
     const request = () =>
       fileChildren.map((file) => {
         formData.append('file', file);
-        fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-          method: 'POST',
-          body: formData,
-        });
+        fetch(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUD_NAME}/image/upload`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
       });
 
     Promise.all(request())
@@ -79,7 +80,14 @@ export default function Home() {
           <div className={styles.grid}></div>
           {imgSrc &&
             imgSrc.map((image, i) => (
-              <img key={i} src={image} className={styles.img} />
+              <Image
+                key={i}
+                src={image}
+                height={64}
+                width={64}
+                alt='uploads'
+                className={styles.img}
+              />
             ))}
           <button className={styles.button}>Submit</button>
         </form>
